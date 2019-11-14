@@ -6,17 +6,25 @@ import math
 import numpy as np
 import warnings
 
-# Funcion que convierte una hora en formato HH:MM:SS en un entero que representa
-# los segundos transcurridos en el dia para dicha hora.
+
 def hr_to_sec(hour):
+    """
+    Función que convierte una hora en formato HH:MM:SS en un entero que representa
+    los segundos transcurridos en el dia para dicha hora.
+    :param hour:
+    :return sec: - hora en segundos
+    """
     h, m, s = hour.split(':')
     sec = int(h) * 3600 + int(m) * 60 + int(s)
     return sec
 
-
-# Funcion para leer los dos tipos de archivo de registro de patentes y convertirlos
-# en un dataframe
 def file_to_df(filename):
+    """
+    Funcion para leer los archivos de la policia (.csv) o de las LPR propias (.log) de registro de patentes y convertirlos en un dataframe
+    :param filename: - path al archivo
+    :return df: - data frame de pandas con los campos ["Patente", "Hora", "Hora_sec"]
+    """
+
     if ".csv" in filename:
         df_file = pd.read_csv(filename, sep=";")
         patentes = df_file["Patente"].values.tolist()
@@ -43,11 +51,15 @@ def file_to_df(filename):
     return df
 
 
-# Funcion que encuentra todas las patentes que estan duplicadas
-def get_dupes(a):
+def get_dupes(patentes):
+    """
+    Funcion que encuentra todas las patentes que estan duplicadas
+    :param patentes:
+    :return dupes : - patentes duplicadas
+    """
     seen = {}
     dupes = []
-    for x in a:
+    for x in patentes:
         if x not in seen:
             seen[x] = 0
         else:
@@ -56,9 +68,13 @@ def get_dupes(a):
             seen[x] += 0
     return dupes
 
-
-# Funcion que obtiene todos los time stamps presentes para una patente
 def get_hora_sec(pat, df):
+    """
+    Funcion que obtiene todos los time stamps presentes para una patente en segundos.
+    :param pat:
+    :param df: - pandas dataframe
+    :return hora_sec: - time stamps
+    """
     df_patentes = df['Patente'].values.tolist()
     df_hora_sec = df['Hora_sec'].values.tolist()
 
@@ -69,10 +85,15 @@ def get_hora_sec(pat, df):
 
     return hora_sec
 
-# Funcion que obtiene los time stamps a excluir dada una patente duplicada
 def get_tmstmp_exclude(pat, df, thr):
+    """
+    Funcion que obtiene los time stamps a excluir dada una patente duplicada
+    :param pat:
+    :param df: - pandas dataframe
+    :param thr: - umbral en segundos para excluir patentes iguales
+    :return excluir:  - time stamps a excluir
+    """
     hora_sec = get_hora_sec(pat, df)
-
     i = 0
     j = 0
     excluir = []
@@ -87,8 +108,13 @@ def get_tmstmp_exclude(pat, df, thr):
     else:
         return 0
 
-
 def get_pat_dict(df, thr):
+    """
+    Funcion que obtiene las patentes a excluir
+    :param df: - pandas dataframe
+    :param thr: - umbral en segundos para excluir patentes iguales
+    :return:
+    """
     duplicadas = get_dupes(df['Patente'].values.tolist())
     dict_exclude = {}
     for patente in duplicadas:
@@ -97,8 +123,13 @@ def get_pat_dict(df, thr):
             dict_exclude[patente] = excluir
     return dict_exclude
 
-
 def filtrar_patentes(df, thr):
+    """
+    Funcion que realiza las operaciones de filtrado a los datos de captura de un dia
+    :param df: - pandas dataframe
+    :param thr:  - umbral en segundos para excluir patentes iguales
+    :return:
+    """
     pat_exclude_dict = get_pat_dict(df, thr)
     patentes = df['Patente'].values.tolist()
     sec = df['Hora_sec'].values.tolist()
@@ -124,8 +155,13 @@ def filtrar_patentes(df, thr):
     df_filtrado = pd.DataFrame(data, columns=["Patente", "Hora", "Hora_sec"])
     return df_filtrado
 
-# Función que cuenta las ocurrencias de cada  patente del orígen en el destino
+#
 def count_OinD(comb):
+    """
+    Función que cuenta las ocurrencias de cada  patente del orígen en el destino
+    :param comb:  - combinacion de dos archivos
+    :return n: - numero de ocurrencias
+    """
     n = 0
     O_dict, D_dict = get_OD_dict(comb[0], comb[1])
     for key in D_dict.keys():
@@ -133,9 +169,16 @@ def count_OinD(comb):
             n += 1
     return n
 
-# Función que recibe el par de archivos de orígen y destino, y devuelve los dataframes de orígen y destino en el sentido
-#  que corresponde.
+
 def get_OD_df(files_O, files_D, verbose = False):
+    """
+    Función que recibe el par de archivos de orígen y destino, y devuelve los dataframes de orígen y destino en el
+    sentido que corresponde.
+    :param files_O: - par de archivos del origen
+    :param files_D: - par de archivos del destino
+    :param verbose: - default False - opcion de que se imprima la combinacion correcta con el numero de ocurrencias
+    :return O_df, D_df:
+    """
     origen_1 = file_to_df(files_O[0])
     origen_2 = file_to_df(files_O[1])
     destino_1 = file_to_df(files_D[0])
@@ -161,6 +204,12 @@ def get_OD_df(files_O, files_D, verbose = False):
     return comb[best_ind][0], comb[best_ind][1]
 
 def get_OD_dict(O_df, D_df):
+    """
+    Funcion que obtiene los diccionarios a partir de los dataframes de origen y destino.
+    :param O_df: - pandas dataframe del origen
+    :param D_df: -pandas dataframe del destino
+    :return O_dict, D_dict: - diccionarios para el origen y destino con key = Patente y value = tiempo de captura
+    """
     pat_origen = O_df['Patente'].values.tolist()
     pat_destino = D_df['Patente'].values.tolist()
 
@@ -178,6 +227,13 @@ def get_OD_dict(O_df, D_df):
 
 
 def get_ttravel_dict(O_dict, D_dict, t_thr):
+    """
+    Funcion que devuelve el diccionario de tiempo de viaje según tiempo de captura en destino.
+    :param O_dict: - diccionario del origen
+    :param D_dict: - diccionario del destino
+    :param t_thr: - umbral de tiempo de viaje a partir del cual incluir valores
+    :return ttravel_dict: - diccionario que tiene key = tiempo de captura en destino y value = tiempo de viaje
+    """
     ttravel_dict = {}
     for key in D_dict.keys():
         if len(O_dict[key]) == len(D_dict[key]):
@@ -194,14 +250,21 @@ def get_ttravel_dict(O_dict, D_dict, t_thr):
 
 
 def get_ttravel_df(D_df, ttravel_dict):
+    """
+    Funcion que devuelve un pandas dataframe de tiempos de viaje con los campos ['Patente','Hora', 'Hora_sec', 'Tiempo de viaje']
+    :param D_df: - pandas dataframe del destino
+    :param ttravel_dict: - diccionario de tiempos de viaje
+    :return:
+    """
     hora_sec = list(ttravel_dict.keys())
     hora = [D_df['Hora'].values.tolist()[D_df['Hora_sec'].values.tolist().index(t_sec)] for t_sec in hora_sec]
+    patente = [D_df['Patente'].values.tolist()[D_df['Hora_sec'].values.tolist().index(t_sec)] for t_sec in hora_sec]
     tiempo = []
     for key in ttravel_dict.keys():
         tiempo.append(ttravel_dict[key])
 
-    data = list(zip(hora, hora_sec, tiempo))
-    ttravel_df = pd.DataFrame(data, columns=['Hora', 'Hora_sec', 'Tiempo de viaje'])
+    data = list(zip(patente,hora, hora_sec, tiempo))
+    ttravel_df = pd.DataFrame(data, columns=['Patente','Hora', 'Hora_sec', 'Tiempo de viaje'])
     ttravel_df = ttravel_df.sort_values(by='Hora_sec')
     return ttravel_df
 
