@@ -251,7 +251,7 @@ def get_ttravel_dict(O_dict, D_dict, t_thr):
 
 def get_ttravel_df(D_df, ttravel_dict):
     """
-    Funcion que devuelve un pandas dataframe de tiempos de viaje con los campos ['Patente','Hora', 'Hora_sec', 'Tiempo de viaje']
+    Funcion que devuelve un pandas dataframe de tiempos de viaje con los campos ['Patente','Hora', 'Hora_sec', 'Tiempo_viaje']
     :param D_df: - pandas dataframe del destino
     :param ttravel_dict: - diccionario de tiempos de viaje
     :return:
@@ -264,7 +264,7 @@ def get_ttravel_df(D_df, ttravel_dict):
         tiempo.append(ttravel_dict[key])
 
     data = list(zip(patente,hora, hora_sec, tiempo))
-    ttravel_df = pd.DataFrame(data, columns=['Patente','Hora', 'Hora_sec', 'Tiempo de viaje'])
+    ttravel_df = pd.DataFrame(data, columns=['Patente','Hora', 'Hora_sec', 'Tiempo_viaje'])
     ttravel_df = ttravel_df.sort_values(by='Hora_sec')
     return ttravel_df
 
