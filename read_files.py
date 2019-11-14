@@ -31,11 +31,11 @@ def file_to_df(filename):
         data_patentes = []
         data_hora = []
         data_hora_sec = []
-        for line in f.readlines()[1:]:
+        for line in f.readlines()[2:]:
             line_split = line.split(";")
             data_patentes.append(line_split[3].split("=")[1].strip())
-            data_hora.append(line_split[-1].split("=")[1][0:8])
-            data_hora_sec.append(hr_to_sec(line_split[-1].split("=")[1][0:8]))
+            data_hora.append(line_split[1].split("=")[1][0:8])
+            data_hora_sec.append(hr_to_sec(line_split[1].split("=")[1][0:8]))
         f.close()
         data = data = {'Patente': data_patentes, 'Hora': data_hora, 'Hora_sec': data_hora_sec}
         df = pd.DataFrame(data, columns=["Patente", "Hora", "Hora_sec"])
