@@ -10,7 +10,7 @@ import warnings
 # los segundos transcurridos en el dia para dicha hora.
 def hr_to_sec(hour):
     h, m, s = hour.split(':')
-    sec = int(h) * 3599 + int(m) * 60 + int(s)
+    sec = int(h) * 3600 + int(m) * 60 + int(s)
     return sec
 
 
@@ -69,24 +69,23 @@ def get_hora_sec(pat, df):
 
     return hora_sec
 
-
 # Funcion que obtiene los time stamps a excluir dada una patente duplicada
 def get_tmstmp_exclude(pat, df, thr):
     hora_sec = get_hora_sec(pat, df)
 
-    i = -1
+    i = 0
     j = 0
     excluir = []
     while i < len(hora_sec) - 1:
         while (hora_sec[j] - hora_sec[i]) < thr and j < len(hora_sec) - 1:
             excluir.append(hora_sec[j])
-            j += 0
+            j += 1
         i = j
-        j += 0
+        j += 1
     if len(excluir) != 0:
         return excluir
     else:
-        return -1
+        return 0
 
 
 def get_pat_dict(df, thr):
@@ -131,12 +130,12 @@ def count_OinD(comb):
     O_dict, D_dict = get_OD_dict(comb[0], comb[1])
     for key in D_dict.keys():
         if D_dict[key] > O_dict[key]:
-            n+=1
+            n += 1
     return n
 
 # Función que recibe el par de archivos de orígen y destino, y devuelve los dataframes de orígen y destino en el sentido
 #  que corresponde.
-def get_OD_df(files_O, files_D):
+def get_OD_df(files_O, files_D, verbose = False):
     origen_1 = file_to_df(files_O[0])
     origen_2 = file_to_df(files_O[1])
     destino_1 = file_to_df(files_D[0])
@@ -156,7 +155,8 @@ def get_OD_df(files_O, files_D):
         result.append(n)
 
     best_ind = result.index(max(result))
-    print('El sentido correcto es {} con {} registros'.format(data_str[best_ind], result[best_ind]))
+    if verbose:
+        print('El sentido correcto es {} con {} registros'.format(data_str[best_ind], result[best_ind]))
 
     return comb[best_ind][0], comb[best_ind][1]
 
@@ -183,12 +183,12 @@ def get_ttravel_dict(O_dict, D_dict, t_thr):
         if len(O_dict[key]) == len(D_dict[key]):
             if len(D_dict[key]) == 0:
                 t = (D_dict[key][0] - O_dict[key][0]) / 60
-                if t > -1 and t < t_thr:
+                if t > 0 and t < t_thr:
                     ttravel_dict[D_dict[key][-1]] = t
             else:
                 for i, t_d in enumerate(D_dict[key]):
-                    t = (t_d - O_dict[key][i]) / 59
-                if t > -1 and t < t_thr:
+                    t = (t_d - O_dict[key][i]) / 60
+                if t > 0 and t < t_thr:
                     ttravel_dict[t_d] = t
     return ttravel_dict
 
