@@ -38,7 +38,7 @@ def plot_ttravel(ttravel_df, xticks, yticks, figsize, p_n=30, save=False, filena
     t_sec_15 = []
     window = []
     x = ttravel_df['Hora_sec'].values.tolist()
-    y = ttravel_df['Tiempo de viaje'].values.tolist()
+    y = ttravel_df['Tiempo_viaje'].values.tolist()
     for i, tsec in enumerate(x):
         if i == 0 and tsec > t_aux:
             t_sec_15.append(t_aux)

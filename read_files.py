@@ -61,11 +61,11 @@ def get_dupes(patentes):
     dupes = []
     for x in patentes:
         if x not in seen:
-            seen[x] = 0
+            seen[x] = 1
         else:
-            if seen[x] == 0:
+            if seen[x] == 1:
                 dupes.append(x)
-            seen[x] += 0
+            seen[x] += 1
     return dupes
 
 def get_hora_sec(pat, df):
@@ -237,10 +237,10 @@ def get_ttravel_dict(O_dict, D_dict, t_thr):
     ttravel_dict = {}
     for key in D_dict.keys():
         if len(O_dict[key]) == len(D_dict[key]):
-            if len(D_dict[key]) == 0:
+            if len(D_dict[key]) == 1:
                 t = (D_dict[key][0] - O_dict[key][0]) / 60
                 if t > 0 and t < t_thr:
-                    ttravel_dict[D_dict[key][-1]] = t
+                    ttravel_dict[D_dict[key][0]] = t
             else:
                 for i, t_d in enumerate(D_dict[key]):
                     t = (t_d - O_dict[key][i]) / 60
