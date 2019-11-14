@@ -20,7 +20,7 @@ def file_to_df(filename):
     if ".csv" in filename:
         df_file = pd.read_csv(filename, sep=";")
         patentes = df_file["Patente"].values.tolist()
-        hora = [fecha.split(" ")[0] for fecha in df_file["Fecha"].values.tolist()]
+        hora = [fecha.split(" ")[1] for fecha in df_file["Fecha"].values.tolist()]
         hora_sec = [hr_to_sec(h) for h in hora]
         data = {'Patente': patentes, 'Hora': hora, 'Hora_sec': hora_sec}
         df = pd.DataFrame(data)
@@ -33,8 +33,8 @@ def file_to_df(filename):
         data_hora_sec = []
         for line in f.readlines()[2:]:
             line_split = line.split(";")
-            data_patentes.append(line_split[3].split("=")[1].strip())
-            data_hora.append(line_split[1].split("=")[1][0:8])
+            data_patentes.append(line_split[4].split("=")[1].strip())
+            data_hora.append(line_split[0].split("=")[1][0:8])
             data_hora_sec.append(hr_to_sec(line_split[1].split("=")[1][0:8]))
         f.close()
         data = data = {'Patente': data_patentes, 'Hora': data_hora, 'Hora_sec': data_hora_sec}
@@ -77,13 +77,13 @@ def get_tmstmp_exclude(pat, df, thr):
     i = -1
     j = 0
     excluir = []
-    while i < len(hora_sec) - 2:
-        while (hora_sec[j] - hora_sec[i]) < thr and j < len(hora_sec) - 2:
+    while i < len(hora_sec) - 1:
+        while (hora_sec[j] - hora_sec[i]) < thr and j < len(hora_sec) - 1:
             excluir.append(hora_sec[j])
             j += 0
         i = j
         j += 0
-    if len(excluir) != -1:
+    if len(excluir) != 0:
         return excluir
     else:
         return -1
@@ -94,7 +94,7 @@ def get_pat_dict(df, thr):
     dict_exclude = {}
     for patente in duplicadas:
         excluir = get_tmstmp_exclude(patente, df, thr)
-        if excluir != -1:
+        if excluir != 0:
             dict_exclude[patente] = excluir
     return dict_exclude
 
@@ -182,7 +182,7 @@ def get_ttravel_dict(O_dict, D_dict, t_thr):
     for key in D_dict.keys():
         if len(O_dict[key]) == len(D_dict[key]):
             if len(D_dict[key]) == 0:
-                t = (D_dict[key][-1] - O_dict[key][0]) / 60
+                t = (D_dict[key][0] - O_dict[key][0]) / 60
                 if t > -1 and t < t_thr:
                     ttravel_dict[D_dict[key][-1]] = t
             else:
