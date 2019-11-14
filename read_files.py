@@ -125,6 +125,40 @@ def filtrar_patentes(df, thr):
     df_filtrado = pd.DataFrame(data, columns=["Patente", "Hora", "Hora_sec"])
     return df_filtrado
 
+# Función que cuenta las ocurrencias de cada  patente del orígen en el destino
+def count_OinD(comb):
+    n = 0
+    O_dict, D_dict = get_OD_dict(comb[0], comb[1])
+    for key in D_dict.keys():
+        if D_dict[key] > O_dict[key]:
+            n+=1
+    return n
+
+# Función que recibe el par de archivos de orígen y destino, y devuelve los dataframes de orígen y destino en el sentido
+#  que corresponde.
+def get_OD_df(files_O, files_D):
+    origen_1 = file_to_df(files_O[0])
+    origen_2 = file_to_df(files_O[1])
+    destino_1 = file_to_df(files_D[0])
+    destino_2 = file_to_df(files_D[1])
+
+    O1_df = filtrar_patentes(origen_1, 300)
+    O2_df = filtrar_patentes(origen_2, 300)
+    D1_df = filtrar_patentes(destino_1, 300)
+    D2_df = filtrar_patentes(destino_2, 300)
+
+    comb = [[O1_df, D1_df], [O1_df, D2_df], [O2_df, D1_df], [O2_df, D2_df]]
+    data_str = ['O1 a D1', 'O1 a D2', 'O2 a D1', 'O2 a D2']
+
+    result = []
+    for i, data in enumerate(comb):
+        n = count_OinD(data)
+        result.append(n)
+
+    best_ind = result.index(max(result))
+    print('El sentido correcto es {} con {} registros'.format(data_str[best_ind], result[best_ind]))
+
+    return comb[best_ind][0], comb[best_ind][1]
 
 def get_OD_dict(O_df, D_df):
     pat_origen = O_df['Patente'].values.tolist()
@@ -170,3 +204,5 @@ def get_ttravel_df(D_df, ttravel_dict):
     ttravel_df = pd.DataFrame(data, columns=['Hora', 'Hora_sec', 'Tiempo de viaje'])
     ttravel_df = ttravel_df.sort_values(by='Hora_sec')
     return ttravel_df
+
+
