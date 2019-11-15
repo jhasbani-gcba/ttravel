@@ -43,7 +43,7 @@ def file_to_df(filename):
             line_split = line.split(";")
             data_patentes.append(line_split[4].split("=")[1].strip())
             data_hora.append(line_split[0].split("=")[1][0:8])
-            data_hora_sec.append(hr_to_sec(line_split[1].split("=")[1][0:8]))
+            data_hora_sec.append(hr_to_sec(line_split[0].split("=")[1][0:8]))
         f.close()
         data = data = {'Patente': data_patentes, 'Hora': data_hora, 'Hora_sec': data_hora_sec}
         df = pd.DataFrame(data, columns=["Patente", "Hora", "Hora_sec"])
@@ -95,7 +95,7 @@ def get_tmstmp_exclude(pat, df, thr):
     """
     hora_sec = get_hora_sec(pat, df)
     i = 0
-    j = 0
+    j = 1
     excluir = []
     while i < len(hora_sec) - 1:
         while (hora_sec[j] - hora_sec[i]) < thr and j < len(hora_sec) - 1:
@@ -170,7 +170,7 @@ def count_OinD(comb):
     return n
 
 
-def get_OD_df(files_O, files_D, verbose = False):
+def get_OD_df(files_O, files_D, verbose=False):
     """
     Función que recibe el par de archivos de orígen y destino, y devuelve los dataframes de orígen y destino en el
     sentido que corresponde.
@@ -222,7 +222,6 @@ def get_OD_dict(O_df, D_df):
 
             O_dict[pat] = t_origen
             D_dict[pat] = t_dest
-
     return O_dict, D_dict
 
 
@@ -244,8 +243,8 @@ def get_ttravel_dict(O_dict, D_dict, t_thr):
             else:
                 for i, t_d in enumerate(D_dict[key]):
                     t = (t_d - O_dict[key][i]) / 60
-                if t > 0 and t < t_thr:
-                    ttravel_dict[t_d] = t
+                    if t > 0 and t < t_thr:
+                        ttravel_dict[t_d] = t
     return ttravel_dict
 
 
@@ -263,8 +262,8 @@ def get_ttravel_df(D_df, ttravel_dict):
     for key in ttravel_dict.keys():
         tiempo.append(ttravel_dict[key])
 
-    data = list(zip(patente,hora, hora_sec, tiempo))
-    ttravel_df = pd.DataFrame(data, columns=['Patente','Hora', 'Hora_sec', 'Tiempo_viaje'])
+    data = list(zip(patente, hora, hora_sec, tiempo))
+    ttravel_df = pd.DataFrame(data, columns=['Patente', 'Hora', 'Hora_sec', 'Tiempo_viaje'])
     ttravel_df = ttravel_df.sort_values(by='Hora_sec')
     return ttravel_df
 
