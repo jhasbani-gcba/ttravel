@@ -1,10 +1,7 @@
-import os
 import matplotlib.pyplot as plt
-import pandas as pd
-import calendar
-import math
 import numpy as np
 import warnings
+from sklearn.metrics import r2_score
 
 
 def get_ticks(min_frac, max_time):
@@ -31,13 +28,11 @@ def get_ticks(min_frac, max_time):
 
     return [sec, hora_str], [t_viaje, t_viaje_str]
 
-def get_avg15(ttravel_df):
+def get_avg15(x, y):
     avg_15 = []
     t_aux = 900
     t_sec_15 = []
     window = []
-    x = ttravel_df['Hora_sec'].values.tolist()
-    y = ttravel_df['Tiempo_viaje'].values.tolist()
     for i, tsec in enumerate(x):
         if i == 0 and tsec > t_aux:
             t_sec_15.append(t_aux)
@@ -54,8 +49,16 @@ def get_avg15(ttravel_df):
             window.append(y[i])
     return t_sec_15, avg_15
 
+def get_opt_degree(x,y):
+    R2_list = []
+    for deg in range(1, 30):
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            p = np.poly1d(np.polyfit(x, y, deg))
+        R2_list.append(r2_score(y, p(x)))
+    return R2_list.index(max(R2_list))
 
-def plot_ttravel(ttravel_df, xticks, yticks, figsize, p_n=30, save=False, filename='ttravel_plot.png'):
+def plot_ttravel(ttravel_df, xticks, yticks, figsize, save=False, filename='ttravel_plot.png'):
     if isinstance(ttravel_df, list):
         f = plt.figure(figsize=figsize)
         ax = plt.axes()
@@ -65,10 +68,10 @@ def plot_ttravel(ttravel_df, xticks, yticks, figsize, p_n=30, save=False, filena
             t_sec_15, avg_15 = get_avg15(x, y)
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore', np.RankWarning)
-                p = np.poly1d(np.polyfit(t_sec_15, avg_15, p_n))
+                p = np.poly1d(np.polyfit(t_sec_15, avg_15, get_opt_degree(t_sec_15, avg_15)))
             ax.scatter(x, y, s=150, label='Dia ' + str(i))
-            ax.plt(t_sec_15, p(t_sec_15), linewidth=15, label='Dia ' + str(i))
-        ax.set_xticklabels(xticks[1], fontsize=10)
+            ax.plot(t_sec_15, p(t_sec_15), linewidth=15, label='Dia ' + str(i))
+        ax.set_xticklabels(xticks[1], fontsize=30)
         ax.set_yticklabels(yticks[1], fontsize=30)
         ax.legend(fontsize=30)
         plt.xticks(xticks[0])
@@ -88,7 +91,7 @@ def plot_ttravel(ttravel_df, xticks, yticks, figsize, p_n=30, save=False, filena
         f = plt.figure(figsize=figsize)
         ax = plt.axes()
         ax.scatter(x, y, s=150, color='black', label='Tiempo de viaje')
-        ax.plt(t_sec_15, p(t_sec_15), c='r', linewidth=15, label='Promedio tomado cada 15 min')
+        ax.plot(t_sec_15, p(t_sec_15), c='r', linewidth=15, label='Promedio tomado cada 15 min')
         ax.set_xticklabels(xticks[1], fontsize=10)
         ax.set_yticklabels(yticks[1], fontsize=30)
         ax.legend(fontsize=30)
