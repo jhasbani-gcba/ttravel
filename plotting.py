@@ -31,8 +31,7 @@ def get_ticks(min_frac, max_time):
 
     return [sec, hora_str], [t_viaje, t_viaje_str]
 
-
-def plot_ttravel(ttravel_df, xticks, yticks, figsize, p_n=30, save=False, filename='ttravel_plot.png'):
+def get_avg15(ttravel_df):
     avg_15 = []
     t_aux = 900
     t_sec_15 = []
@@ -53,30 +52,52 @@ def plot_ttravel(ttravel_df, xticks, yticks, figsize, p_n=30, save=False, filena
             t_sec_15.append(t_aux)
             window = []
             window.append(y[i])
+    return t_sec_15, avg_15
 
-    f1, ax = plt.subplots(figsize=figsize)
-    ax.scatter(x, y, s=50, color='black')
-    # ax.scatter(x,y_avg,color = 'red',s=20)
-    plt.xlabel('Hora del día', fontsize=40)
-    plt.ylabel('Tiempo de viaje (min)', fontsize=40)
-    plt.xticks(xticks[0])
-    plt.yticks(yticks[0])
-    ax.set_xticklabels(xticks[1], fontsize=30)
-    ax.set_yticklabels(yticks[1], fontsize=30)
 
-    ax2 = ax.twiny()
-    legend = []
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore', np.RankWarning)
-        p = np.poly1d(np.polyfit(t_sec_15, avg_15, p_n))
-    ax2.plot(t_sec_15, p(t_sec_15), c='r', linewidth=5)
+def plot_ttravel(ttravel_df, xticks, yticks, figsize, p_n=30, save=False, filename='ttravel_plot.png'):
+    if isinstance(ttravel_df, list):
+        f = plt.figure(figsize=figsize)
+        ax = plt.axes()
+        for i, df in enumerate(ttravel_df):
+            x = df['Hora_sec'].values.tolist()
+            y = df['Tiempo_viaje'].values.tolist()
+            t_sec_15, avg_15 = get_avg15(x, y)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', np.RankWarning)
+                p = np.poly1d(np.polyfit(t_sec_15, avg_15, p_n))
+            ax.scatter(x, y, s=150, label='Dia ' + str(i))
+            ax.plt(t_sec_15, p(t_sec_15), linewidth=15, label='Dia ' + str(i))
+        ax.set_xticklabels(xticks[1], fontsize=10)
+        ax.set_yticklabels(yticks[1], fontsize=30)
+        ax.legend(fontsize=30)
+        plt.xticks(xticks[0])
+        plt.yticks(yticks[0])
+        plt.xlabel('Hora del día', fontsize=40)
+        plt.ylabel('Tiempo de viaje (min)', fontsize=40)
+        plt.title("Tiempo de viaje y tiempo de viaje promedio tomado cada 15 minutos", fontsize=60)
+        plt.show()
+    else:
+        x = ttravel_df['Hora_sec'].values.tolist()
+        y = ttravel_df['Tiempo_viaje'].values.tolist()
+        t_sec_15, avg_15 = get_avg15(x, y)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', np.RankWarning)
+            p = np.poly1d(np.polyfit(t_sec_15, avg_15, p_n))
 
-    ax2.set_xticklabels(xticks[1], fontsize=10)
-    ax2.set_yticklabels(yticks[1], fontsize=30)
-    ax.legend(['Tiempo de viaje'], loc=1, fontsize=30)
-    ax2.legend(['Promedio de tiempo de viaje cada 15 min.'], loc=4, fontsize=30)
-    plt.title("Tiempo de viaje y tiempo de viaje promedio tomado cada 15 minutos", fontsize=40)
-    plt.show()
+        f = plt.figure(figsize=figsize)
+        ax = plt.axes()
+        ax.scatter(x, y, s=150, color='black', label='Tiempo de viaje')
+        ax.plt(t_sec_15, p(t_sec_15), c='r', linewidth=15, label='Promedio tomado cada 15 min')
+        ax.set_xticklabels(xticks[1], fontsize=10)
+        ax.set_yticklabels(yticks[1], fontsize=30)
+        ax.legend(fontsize=30)
+        plt.xticks(xticks[0])
+        plt.yticks(yticks[0])
+        plt.xlabel('Hora del día', fontsize=40)
+        plt.ylabel('Tiempo de viaje (min)', fontsize=40)
+        plt.title("Tiempo de viaje y tiempo de viaje promedio tomado cada 15 minutos", fontsize=60)
+        plt.show()
 
     if save:
-        f1.savefig(filename)
+        f.savefig(filename)
